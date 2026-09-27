@@ -97,17 +97,25 @@ GET    /api/v1/products              ?category=slug&min_price&max_price&sort=new
 GET    /api/v1/products/search       ?q=
 GET    /api/v1/products/{slug}
 
+# Customer orders (auth:customer) — cart lives on the frontend
+POST   /api/v1/cart/checkout         {items:[{product_id,qty}], delivery:{name,phone,method:courier|pickup,address,comment}, payment_method:click|payme|cash}
+GET    /api/v1/user/orders
+GET    /api/v1/user/orders/{id}
+
 # Admin (auth:api + role:admin,manager)
 CRUD   /api/v1/admin/categories
 CRUD   /api/v1/admin/products
 POST   /api/v1/admin/products/{id}/images    (multipart images[])
 DELETE /api/v1/admin/products/{id}/images    (body: path)
+GET    /api/v1/admin/orders                  ?status&payment_status&customer_id
+GET    /api/v1/admin/orders/{id}
+PUT    /api/v1/admin/orders/{id}/status      {status}
 
 # Staff (auth:api + role:admin)
 GET|POST /api/v1/admin/users, PUT|DELETE /api/v1/admin/users/{id}  (DELETE = deactivate)
 ```
 
-Other conventions: business-rule violations in services throw `App\Exceptions\BusinessRuleException` (renders JSON 422/409/404). `role:` middleware = `App\Http\Middleware\EnsureUserHasRole` (also rejects inactive staff). Enum lives at `App\UserRole` (not App\Enums).
+Other conventions: business-rule violations in services throw `App\Exceptions\BusinessRuleException` (renders JSON 422/409/404). `role:` middleware = `App\Http\Middleware\EnsureUserHasRole` (also rejects inactive staff). `UserRole` enum lives at `App\UserRole`; newer enums (OrderStatus, PaymentMethod, PaymentStatus, DeliveryMethod) are in `App\Enums`.
 
 ## Key Conventions
 1. **Controllers** — only: receive request → call service → return response. NO business logic.
@@ -148,9 +156,10 @@ php artisan db:seed --class=AdminUserSeeder
 - All auth endpoints tested in Postman
 - Catalog: categories/products (RU/UZ `*_ru`/`*_uz` columns), public endpoints, admin CRUD + image upload, `CatalogSeeder`
 - Staff management (`AdminUserController`), role middleware, `users.is_active`
-- Feature tests: `tests/Feature/Catalog`, `tests/Feature/Admin`
+- Orders: checkout (DB prices, stock locked + decremented), customer history, admin list + status transitions (`OrderService`)
+- Feature tests: `tests/Feature/Catalog`, `tests/Feature/Admin`, `tests/Feature/Order`
 
 ## What's NOT Done Yet ❌
-- Orders, cart, payments (Click/Payme)
+- Payments (Click/Payme), pay from balance (`balance_transactions`)
 - Telegram login for customers
 - Vue 3 frontend (separate project at /var/www/e-garage/frontend)

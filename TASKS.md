@@ -62,20 +62,22 @@
 - [x] Product seeder (test data) — `CatalogSeeder`, re-runnable
 
 ### Backend — Orders & Cart
-- [ ] Migration: `orders` (customer_id, status, total, delivery_address JSON, payment_method, payment_status)
+- [x] Migration: `orders` (customer_id, status, total, delivery_address JSON, payment_method, payment_status)
   - status: pending → paid → processing → shipped → completed / cancelled
   - payment_method: click / payme / balance / cash
   - payment_status: pending / paid / failed
   - checkout requires auth:customer (no guest orders)
-- [ ] Migration: `order_items` (order_id, product_id, qty, price_snapshot ← important!)
-- [ ] OrderService — create order, update status
-- [ ] Customer endpoints:
+- [x] Migration: `order_items` (order_id, product_id nullable, sku/name_ru/name_uz snapshot, qty, price_snapshot ← important!)
+- [x] OrderService — create order, update status
+- [x] Customer endpoints:
   - POST /api/v1/cart/checkout         (create order)
   - GET  /api/v1/user/orders           (order history)
   - GET  /api/v1/user/orders/{id}      (order details)
-- [ ] Admin endpoints:
+- [x] Admin endpoints:
   - GET /api/v1/admin/orders
+  - GET /api/v1/admin/orders/{id}
   - PUT /api/v1/admin/orders/{id}/status
+- [ ] Pay from balance (needs `balance_transactions` table — `balance` currently rejected at checkout)
 
 ### Backend — Payments
 - [ ] Register merchant: Click + Payme (takes 5–14 days — start ASAP)

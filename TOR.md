@@ -216,7 +216,7 @@ Guard всегда указывается явно: `auth()->guard('customer')` 
 - id, customer_id (FK), status (enum, см. 4.7), total (decimal), delivery_address (JSON: имя, телефон, адрес, способ доставки, комментарий), payment_method (enum: click/payme/balance/cash), payment_status (enum: pending/paid/failed), timestamps
 
 **order_items**
-- id, order_id (FK), product_id (FK), qty (int), price_snapshot (decimal — цена на момент заказа, **обязательно**, т.к. цена товара может измениться)
+- id, order_id (FK), product_id (FK, nullable — товар могут удалить), sku, name_ru, name_uz (снимок товара), qty (int), price_snapshot (decimal — цена на момент заказа, **обязательно**, т.к. цена товара может измениться)
 
 **payments**
 - id, order_id (FK), provider (enum: click/payme), external_id (ID транзакции у провайдера), amount (decimal), status, payload (JSON — сырой ответ провайдера), timestamps
@@ -289,6 +289,8 @@ Guard всегда указывается явно: `auth()->guard('customer')` 
 ### 4.7 Поток заказа и оплаты
 
 Статусы заказа: `pending` → `paid` → `processing` → `shipped` → `completed`, либо `cancelled`.
+
+Правила смены статуса менеджером: `pending → processing | cancelled`, `paid → processing | cancelled`, `processing → shipped | cancelled`, `shipped → completed`. Статус `paid` вручную не ставится. Онлайн-заказ (Click/Payme) нельзя перевести в `processing`, пока он не оплачен. При отмене остатки возвращаются на склад. Заказ с оплатой наличными при `completed` получает `payment_status = paid`. Способ доставки: `courier` (адрес обязателен) или `pickup`. Оплата с баланса пока отклоняется — появится вместе с `balance_transactions`.
 
 1. Покупатель оформляет заказ (`POST /cart/checkout`) → `OrderService` создаёт заказ со статусом `pending`, `payment_status = pending`, фиксирует `price_snapshot` каждой позиции.
 2. **Click / Payme** — `ClickPaymentService` или `PaymePaymentService` (оба реализуют `PaymentGatewayInterface`) возвращают фронтенду ссылку на оплату.
