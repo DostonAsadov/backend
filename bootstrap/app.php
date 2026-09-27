@@ -16,8 +16,14 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         //
         $middleware->redirectGuestsTo(fn() => null);
+        $middleware->alias([
+            'role' => \App\Http\Middleware\EnsureUserHasRole::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Для /api/* всегда JSON (422, 404 и т.д.), даже без заголовка Accept
+        $exceptions->shouldRenderJsonWhen(fn(Request $request) => $request->is('api/*'));
+
         $exceptions->render(function (AuthenticationException $e, Request $request) {
             // Ответ для API-запросов (JSON)
             return response()->json(['message' => 'Пользователь не авторизован.'], 401);

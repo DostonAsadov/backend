@@ -3,16 +3,20 @@
 namespace App\Models;
 
 use App\UserRole;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
 
 class User extends Authenticatable implements JWTSubject
 {
+    use HasFactory;
+
     protected $fillable = [
         'name',
         'email',
         'password',
         'role',
+        'is_active',
     ];
 
     protected $hidden = [
@@ -25,6 +29,7 @@ class User extends Authenticatable implements JWTSubject
         return [
             'password' => 'hashed',
             'role' => UserRole::class,
+            'is_active' => 'boolean',
         ];
     }
 

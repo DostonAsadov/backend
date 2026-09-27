@@ -16,7 +16,8 @@ class AdminAuthService
     public function login(array $credentials): array
     {
         // Логика аутентификации администратора
-        if ($token = auth()->guard('api')->attempt($credentials)) {
+        // деактивированные сотрудники не могут войти
+        if ($token = auth()->guard('api')->attempt([...$credentials, 'is_active' => true])) {
             return ['token' => $token];
         }
         return [];

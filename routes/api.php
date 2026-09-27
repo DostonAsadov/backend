@@ -3,6 +3,11 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\Auth\CustomerAuthController;
 use App\Http\Controllers\Api\V1\Auth\AdminAuthController;
+use App\Http\Controllers\Api\V1\Catalog\CategoryController;
+use App\Http\Controllers\Api\V1\Catalog\ProductController;
+use App\Http\Controllers\Api\V1\Admin\AdminUserController;
+use App\Http\Controllers\Api\V1\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Api\V1\Admin\ProductController as AdminProductController;
 
 // Публичные роуты — покупатели
 Route::prefix('v1')->group(function () {
@@ -29,6 +34,25 @@ Route::prefix('v1')->group(function () {
         Route::middleware('auth:api')->group(function () {
             Route::post('logout', [AdminAuthController::class, 'logout']);
             Route::get('me',      [AdminAuthController::class, 'me']);
+        });
+    });
+
+    // Каталог (публичный)
+    Route::get('categories',        [CategoryController::class, 'index']);
+    Route::get('products',          [ProductController::class, 'index']);
+    Route::get('products/search',   [ProductController::class, 'search']);
+    Route::get('products/{slug}',   [ProductController::class, 'show']);
+
+    // Админка — любой активный сотрудник (admin, manager)
+    Route::prefix('admin')->middleware(['auth:api', 'role:admin,manager'])->group(function () {
+        Route::apiResource('categories', AdminCategoryController::class);
+        Route::apiResource('products',   AdminProductController::class);
+        Route::post('products/{product}/images',   [AdminProductController::class, 'uploadImages']);
+        Route::delete('products/{product}/images', [AdminProductController::class, 'deleteImage']);
+
+        // Управление сотрудниками — только admin
+        Route::middleware('role:admin')->group(function () {
+            Route::apiResource('users', AdminUserController::class)->except('show');
         });
     });
 });
